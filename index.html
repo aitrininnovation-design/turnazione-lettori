@@ -207,6 +207,16 @@ const fmtBreve = s => { const d = dataDa(s); return `${d.getDate()} ${MESI[d.get
 const inizioMese = ym => ym + '-01';
 const fineMese = ym => { const [y, m] = ym.split('-').map(Number); return iso(new Date(y, m, 0)); };
 const meseDi = s => s.slice(0, 7);
+/* Ora legale in Italia: dall'ultima domenica di marzo (compresa) all'ultima domenica di ottobre (esclusa) */
+const ultimaDomenica = (anno, mese) => { const d = new Date(anno, mese, 0); d.setDate(d.getDate() - d.getDay()); return iso(d); };
+const inizioLegale = anno => ultimaDomenica(anno, 3);
+const fineLegale = anno => ultimaDomenica(anno, 10);
+const eOraLegale = s => { const a = Number(s.slice(0, 4)); return s >= inizioLegale(a) && s < fineLegale(a); };
+/* Una messa ricorrente può avere due orari: «ora» vale con l'ora solare, «oraLegale» (se indicata) con l'ora legale */
+const dueOrari = m => !!(m.oraLegale && m.oraLegale !== m.ora);
+const oraMessa = (m, data) => dueOrari(m) && eOraLegale(data) ? m.oraLegale : m.ora;
+const etichettaOre = m => dueOrari(m) ? `ore ${m.ora} (solare) / ${m.oraLegale} (legale)` : `ore ${m.ora}`;
+const piuUnOra = o => { const [h, mi] = o.split(':').map(Number); return pad((h + 1) % 24) + ':' + pad(mi); };
 const lunediDi = s => { const d = dataDa(s); const g = (d.getDay() + 6) % 7; return piuGiorni(s, -g); };
 
 function etichettaPeriodo(da, a) {
@@ -374,7 +384,7 @@ function eventi(da, a, opz = {}) {
     const dow = dataDa(g).getDay();
     for (const m of DB.messe) {
       if (m.attiva === false || m.giorno !== dow) continue;
-      out.push({ chiave: g + '|' + m.id, data: g, ora: m.ora, parrocchiaId: m.parrocchiaId, nome: m.nome || '', ruoli: m.ruoli, origineId: m.id, speciale: false });
+      out.push({ chiave: g + '|' + m.id, data: g, ora: oraMessa(m, g), parrocchiaId: m.parrocchiaId, nome: m.nome || '', ruoli: m.ruoli, origineId: m.id, speciale: false });
     }
     for (const c of DB.celebrazioni) {
       if (c.data !== g) continue;
@@ -533,6 +543,11 @@ function vistaTurni() {
   }
   if (!evs.length) h += `<p class="vuoto-msg">Nessuna celebrazione in questo mese.${SOLA_LETTURA ? '' : '<br>Aggiungi le messe nella scheda <b>Messe</b>.'}</p>`;
 
+  if ((m === 3 || m === 10) && DB.messe.some(x => x.attiva !== false && dueOrari(x))) {
+    const dc = m === 3 ? inizioLegale(y) : fineLegale(y);
+    h += `<p class="scheda piccolo-t mb">🕒 Da ${fmtGiorno(dc)} ${m === 3 ? 'è in vigore l\'ora legale' : 'torna l\'ora solare'}: le messe con due orari passano da sole all'orario ${m === 3 ? 'estivo' : 'invernale'}.</p>`;
+  }
+
   let giorno = '';
   for (const e of evs) {
     if (e.saltata && SOLA_LETTURA) continue;
@@ -631,7 +646,7 @@ function dlgLettore(id) {
     const mm = DB.messe.filter(m => m.parrocchiaId === p.id);
     if (!mm.length) return '';
     return `<div class="piccolo-t tenue" style="margin-top:8px">${esc(p.nome)}</div>` + mm.map(m =>
-      `<label class="spunta"><input type="checkbox" class="l-messa" value="${m.id}" ${l.messe.includes(m.id) ? 'checked' : ''}> ${maiusc(GIORNI[m.giorno])} ore ${esc(m.ora)} ${m.nome ? '· ' + esc(m.nome) : ''}</label>`).join('');
+      `<label class="spunta"><input type="checkbox" class="l-messa" value="${m.id}" ${l.messe.includes(m.id) ? 'checked' : ''}> ${maiusc(GIORNI[m.giorno])} ${esc(etichettaOre(m))} ${m.nome ? '· ' + esc(m.nome) : ''}</label>`).join('');
   }).join('');
   apriDlg(id ? 'Modifica lettore' : 'Nuovo lettore', `
     <input type="hidden" id="l-id" value="${esc(l.id)}">
@@ -676,13 +691,20 @@ function vistaMesse() {
     const mm = DB.messe.filter(m => m.parrocchiaId === p.id).sort((a, b) => ((a.giorno + 1) % 7) - ((b.giorno + 1) % 7) || a.ora.localeCompare(b.ora));
     h += `<div class="scheda"><h3><span class="badge" style="--c:${esc(p.colore)}">${esc(p.nome)}</span> Messe con i lettori</h3>`;
     h += mm.length ? mm.map(m => `<button class="lettore ${m.attiva === false ? 'inattivo' : ''}" data-a="dlg-messa" data-id="${m.id}">
-        <div class="cresce"><div class="nome">${maiusc(GIORNI[m.giorno])} · ore ${esc(m.ora)} ${m.nome ? '· ' + esc(m.nome) : ''} ${m.attiva === false ? '<span class="tag">sospesa</span>' : ''}</div>
+        <div class="cresce"><div class="nome">${maiusc(GIORNI[m.giorno])} · ${esc(etichettaOre(m))} ${m.nome ? '· ' + esc(m.nome) : ''} ${m.attiva === false ? '<span class="tag">sospesa</span>' : ''}</div>
         <div class="tenue piccolo-t">${m.ruoli.map(esc).join(' · ')}</div></div><span class="tenue">✎</span></button>`).join('')
       : `<p class="tenue piccolo-t">Nessuna messa.</p>`;
     h += `<button class="btn piccolo mt" data-a="dlg-messa" data-parr="${p.id}">＋ Aggiungi messa</button></div>`;
   }
 
   const og = oggi();
+  {
+    const leg = eOraLegale(og), an = Number(og.slice(0, 4));
+    const prossimo = leg ? fineLegale(an) : (og < inizioLegale(an) ? inizioLegale(an) : inizioLegale(an + 1));
+    h += `<div class="scheda"><h3>🕒 Ora legale e ora solare</h3>
+      <p class="tenue piccolo-t" style="margin:0">Se una messa cambia orario tra inverno ed estate, aprila e spunta <b>«Orario diverso con l'ora legale»</b>: indichi i due orari una volta sola e il programma usa da solo quello giusto per ogni data, anche nei turni già fatti, nel PDF e nei messaggi.<br>
+      Adesso è in vigore l'<b>ora ${leg ? 'legale' : 'solare'}</b>; il prossimo cambio è ${fmtGiorno(prossimo)} ${prossimo.slice(0, 4)}.</p></div>`;
+  }
   const cc = [...DB.celebrazioni].sort((a, b) => a.data.localeCompare(b.data) || a.ora.localeCompare(b.ora));
   h += `<div class="scheda"><h3>Celebrazioni speciali</h3>
     <p class="tenue piccolo-t" style="margin-top:0">Natale, Veglia pasquale, festa patronale, cresime… una data precisa fuori dall'orario abituale.</p>`;
@@ -703,8 +725,13 @@ function dlgMessa(id, speciale, parrId) {
       ${speciale
         ? `<label class="campo cresce">Data<input type="date" id="m-data" value="${esc(m.data)}"></label>`
         : `<label class="campo cresce">Giorno<select id="m-giorno">${[0, 1, 2, 3, 4, 5, 6].map(g => `<option value="${g}" ${g === m.giorno ? 'selected' : ''}>${maiusc(GIORNI[g])}</option>`).join('')}</select></label>`}
-      <label class="campo cresce">Ora<input type="time" id="m-ora" value="${esc(m.ora)}"></label>
+      <label class="campo cresce"><span id="m-ora-et">${!speciale && dueOrari(m) ? 'Ora solare (inverno)' : 'Ora'}</span><input type="time" id="m-ora" value="${esc(m.ora)}"></label>
     </div>
+    ${speciale ? '' : `<label class="spunta"><input type="checkbox" id="m-due" data-c="m-due" ${dueOrari(m) ? 'checked' : ''}> Orario diverso con l'ora legale (estate)</label>
+    <div id="m-legale" ${dueOrari(m) ? '' : 'hidden'}>
+      <label class="campo" style="margin-top:0">Ora legale (estate)<input type="time" id="m-ora-legale" value="${esc(dueOrari(m) ? m.oraLegale : '')}"></label>
+      <p class="tenue piccolo-t">Vale dall'ultima domenica di marzo all'ultima di ottobre; il cambio avviene da solo.</p>
+    </div>`}
     <label class="campo">Nome ${speciale ? '' : '(facoltativo)'}<input type="text" id="m-nome" value="${esc(m.nome || '')}" placeholder="${speciale ? 'es. Messa di Natale' : 'es. Prefestiva, Messa dei ragazzi'}"></label>
     <label class="campo">Letture e salmo da assegnare (separati da virgola)<input type="text" id="m-ruoli" value="${esc(m.ruoli.join(', '))}"></label>
     <p class="tenue piccolo-t">Ogni voce è un lettore da assegnare. Esempio: Prima lettura, Salmo, Seconda lettura, Preghiera dei fedeli.</p>
@@ -1111,6 +1138,12 @@ const AZIONI = {
       if (c) { if (c.data !== dati.data) { delete DB.turni[c.data + '|' + c.id]; } Object.assign(c, dati); } else DB.celebrazioni.push(Object.assign({ id: uid() }, dati));
     } else {
       dati.giorno = Number($('#m-giorno').value); dati.attiva = $('#m-attiva').checked;
+      dati.oraLegale = '';
+      if ($('#m-due').checked) {
+        const ol = $('#m-ora-legale').value;
+        if (!ol) return toast('Indica l\'orario con l\'ora legale');
+        if (ol !== ora) dati.oraLegale = ol;
+      }
       const m = DB.messe.find(x => x.id === id);
       if (m) Object.assign(m, dati); else DB.messe.push(Object.assign({ id: uid() }, dati));
     }
@@ -1173,6 +1206,12 @@ const AZIONI = {
 /* ============================ Modifiche (campi) ============================ */
 const CAMBI = {
   filtro(el) { UI.filtro = el.value; render(); },
+  'm-due'(el) {
+    $('#m-legale').hidden = !el.checked;
+    $('#m-ora-et').textContent = el.checked ? 'Ora solare (inverno)' : 'Ora';
+    const c = $('#m-ora-legale');
+    if (el.checked && !c.value && $('#m-ora').value) c.value = piuUnOra($('#m-ora').value);
+  },
   assegna(el) {
     const k = el.dataset.k, i = Number(el.dataset.i), e = eventoDaChiave(k);
     if (!e) return;
