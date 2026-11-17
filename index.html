@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#e8f2fc">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Turnazione Lettori</title>
+<style>
+:root{
+  color-scheme:light;
+  --bg:#f7fafd; --carta:#ffffff; --testo:#2b3440; --tenue:#6b7785; --bordo:#dbe5ef;
+  --primario:#3d8bd4; --primario-scuro:#2f78bd; --su-primario:#ffffff;
+  --soft:#e8f2fc; --ok:#3aa76d; --allarme:#d9534f; --allarme-bg:#fdeeee;
+  --ombra:0 1px 3px rgba(60,100,140,.10);
+}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--testo);
+  font:16px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+h1,h2,h3,h4{margin:0;line-height:1.2}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+
+.top{position:sticky;top:0;z-index:20;background:var(--soft);color:var(--primario-scuro);border-bottom:1px solid var(--bordo);
+  display:flex;align-items:center;gap:10px;padding:10px 16px;padding-top:calc(10px + env(safe-area-inset-top))}
+.top h1{font-size:18px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top .salva{background:#fff;color:var(--primario-scuro);border:1px solid var(--primario);
+  border-radius:999px;padding:8px 14px;font-size:14px;font-weight:600;white-space:nowrap}
+.top .salva.da-salvare{background:var(--primario);color:#fff}
+
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--carta);border-top:1px solid var(--bordo);
+  display:flex;padding-bottom:env(safe-area-inset-bottom)}
+.tabs button{flex:1;background:none;border:0;padding:8px 2px 9px;font-size:11.5px;color:var(--tenue);
+  display:flex;flex-direction:column;align-items:center;gap:2px;min-height:58px}
+.tabs button .ico{font-size:21px;line-height:1.1}
+.tabs button.attivo{color:var(--primario);font-weight:700}
+
+main{max-width:980px;margin:0 auto;padding:14px 16px 24px}
+
+@media (min-width:800px){
+  body{padding-bottom:24px}
+  .tabs{position:sticky;top:53px;bottom:auto;border-top:0;border-bottom:1px solid var(--bordo);justify-content:center;padding:0}
+  .tabs button{flex:0 0 auto;flex-direction:row;gap:8px;font-size:15px;padding:10px 20px;min-height:48px;border-bottom:3px solid transparent}
+  .tabs button.attivo{border-bottom-color:var(--primario)}
+  .tabs button .ico{font-size:18px}
+}
+
+.btn{background:var(--carta);border:1px solid var(--bordo);border-radius:10px;padding:10px 14px;min-height:44px;
+  font-weight:600;font-size:15px;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;color:var(--testo)}
+.btn:active{transform:translateY(1px)}
+.btn.primario{background:var(--primario);border-color:var(--primario);color:var(--su-primario)}
+.btn.pericolo{color:var(--allarme);border-color:var(--allarme)}
+.btn.piccolo{min-height:36px;padding:6px 10px;font-size:14px}
+.btn.wa{background:#3fc380;border-color:#3fc380;color:#fff}
+.btn.icona{min-width:44px;padding:8px}
+
+.riga{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.riga.spazio{justify-content:space-between}
+.cresce{flex:1;min-width:0}
+.tenue{color:var(--tenue)}
+.piccolo-t{font-size:13.5px}
+.mt{margin-top:14px}.mt2{margin-top:22px}.mb{margin-bottom:10px}
+
+input[type=text],input[type=tel],input[type=date],input[type=time],input[type=search],select,textarea{
+  width:100%;background:var(--carta);border:1px solid var(--bordo);border-radius:10px;padding:10px 12px;min-height:44px;font-size:16px}
+input[type=color]{width:48px;height:44px;border:1px solid var(--bordo);border-radius:10px;background:var(--carta);padding:3px}
+textarea{min-height:110px;resize:vertical}
+label.campo{display:block;margin-top:12px;font-size:13.5px;font-weight:600;color:var(--tenue)}
+label.campo > *{margin-top:4px;font-weight:400;color:var(--testo)}
+label.spunta{display:flex;align-items:center;gap:10px;padding:8px 0;min-height:40px}
+label.spunta input{width:22px;height:22px;accent-color:var(--primario);flex:none}
+
+.scheda{background:var(--carta);border:1px solid var(--bordo);border-radius:14px;padding:14px;box-shadow:var(--ombra)}
+.scheda + .scheda{margin-top:12px}
+.scheda h3{font-size:16px;margin-bottom:8px}
+.badge{display:inline-block;background:var(--c,var(--primario));color:#fff;border-radius:999px;padding:2px 10px;font-size:12.5px;font-weight:600;white-space:nowrap}
+.tag{display:inline-block;background:var(--soft);border-radius:999px;padding:2px 9px;font-size:12.5px;color:var(--tenue)}
+.tag.rosso{background:var(--allarme-bg);color:var(--allarme)}
+
+/* Turni */
+.mese-nav{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.mese-nav h2{flex:1;text-align:center;font-size:20px;text-transform:capitalize}
+.giorno{margin-top:18px}
+.giorno > h3{font-size:15px;color:var(--primario);text-transform:capitalize;margin-bottom:8px;display:flex;gap:8px;align-items:center}
+.giorno.passato{opacity:.62}
+.eventi{display:grid;gap:10px}
+@media (min-width:800px){.eventi{grid-template-columns:repeat(auto-fill,minmax(340px,1fr))}}
+.evento{background:var(--carta);border:1px solid var(--bordo);border-left:5px solid var(--c);border-radius:12px;padding:10px 12px;box-shadow:var(--ombra)}
+.evento header{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+.evento header .ora{font-weight:700;font-size:17px}
+.evento .ruolo{display:grid;grid-template-columns:118px 1fr;gap:8px;align-items:center;margin-top:6px}
+.evento .ruolo span{font-size:13.5px;color:var(--tenue)}
+.evento .ruolo select{min-height:40px;padding:6px 10px}
+.evento .ruolo b.manca{color:var(--allarme);font-weight:600}
+.evento .ruolo select.vuoto{border-color:var(--allarme);background:var(--allarme-bg)}
+.evento .ruolo select.avviso{border-color:#d08a00}
+.evento .nota-avviso{grid-column:2;font-size:12.5px;color:#c98a14;margin-top:-4px}
+.evento.sospesa{opacity:.7;border-left-color:var(--bordo)}
+.link{background:none;border:0;color:var(--primario);font-weight:600;padding:6px 4px;font-size:14px;text-decoration:underline}
+
+/* Lettori */
+.lettore{display:flex;gap:10px;align-items:center;width:100%;text-align:left;background:var(--carta);border:1px solid var(--bordo);
+  border-radius:12px;padding:10px 12px;margin-top:8px;box-shadow:var(--ombra)}
+.lettore .nome{font-weight:700}
+.lettore .conta{font-size:20px;font-weight:700;color:var(--primario);min-width:34px;text-align:center}
+.lettore.inattivo{opacity:.55}
+
+/* Tabelle */
+.scorri{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14.5px}
+th,td{padding:8px 10px;border-bottom:1px solid var(--bordo);text-align:left;vertical-align:top}
+th{font-size:12.5px;color:var(--tenue);text-transform:uppercase;letter-spacing:.03em;white-space:nowrap}
+td.num,th.num{text-align:center}
+.barra{height:8px;background:var(--soft);border-radius:99px;min-width:70px;overflow:hidden}
+.barra i{display:block;height:100%;background:var(--primario);border-radius:99px}
+
+.anteprima{background:var(--carta);border:1px solid var(--bordo);border-radius:12px;padding:6px 12px;margin-top:10px}
+.anteprima td{border-bottom:1px solid var(--bordo)}
+.anteprima tr.g td{background:var(--soft);font-weight:700;color:var(--primario);text-transform:capitalize}
+.vuoto-msg{text-align:center;color:var(--tenue);padding:26px 10px}
+
+dialog{border:0;border-radius:16px;padding:0;width:min(560px,calc(100vw - 20px));max-height:calc(100vh - 30px);
+  background:var(--carta);color:var(--testo);box-shadow:0 10px 40px rgba(60,100,140,.25)}
+dialog::backdrop{background:rgba(150,175,200,.45)}
+.dlg-testa{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--bordo);position:sticky;top:0;background:var(--carta);z-index:1}
+.dlg-testa h3{font-size:18px}
+.dlg-corpo{padding:4px 16px 16px}
+.dlg-piede{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding:12px 16px;border-top:1px solid var(--bordo);position:sticky;bottom:0;background:var(--carta)}
+.gruppo{border:1px solid var(--bordo);border-radius:10px;padding:4px 12px;margin-top:6px}
+.assenza{display:grid;grid-template-columns:1fr 1fr 44px;gap:6px;margin-top:6px}
+
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(86px + env(safe-area-inset-bottom));z-index:60;
+  background:#fff;color:var(--testo);border:1px solid var(--primario);border-radius:12px;padding:10px 14px;display:none;align-items:center;gap:12px;
+  max-width:calc(100vw - 24px);box-shadow:0 6px 20px rgba(60,100,140,.25);font-size:14.5px}
+#toast.su{display:flex}
+#toast button{background:none;border:0;color:var(--primario-scuro);text-decoration:underline;font-weight:700;padding:4px}
+
+#stampa{display:none}
+@media print{
+  body{background:#fff;color:#000;padding:0}
+  body > *:not(#stampa){display:none !important}
+  #stampa{display:block;padding:0 6mm}
+  #stampa h1{font-size:20pt;margin-bottom:2pt}
+  #stampa p{margin:0 0 10pt;color:#444}
+  #stampa table{font-size:11pt}
+  #stampa tr.g td{background:#eee;font-weight:700;text-transform:capitalize}
+  #stampa td{border-bottom:1px solid #ccc}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <h1 id="titolo-app">Turnazione Lettori</h1>
+  <button class="salva" id="btn-salva" data-a="salva-file" title="Salva il file con i dati dentro">💾 Salva file</button>
+</header>
+
+<nav class="tabs" id="tabs">
+  <button data-a="tab" data-tab="turni"><span class="ico">📅</span>Turni</button>
+  <button data-a="tab" data-tab="lettori"><span class="ico">👥</span>Lettori</button>
+  <button data-a="tab" data-tab="messe"><span class="ico">⛪</span>Messe</button>
+  <button data-a="tab" data-tab="esporta"><span class="ico">📤</span>Invia</button>
+  <button data-a="tab" data-tab="altro"><span class="ico">⚙️</span>Altro</button>
+</nav>
+
+<main id="vista"></main>
+<dialog id="dlg"></dialog>
+<div id="toast"></div>
+<div id="stampa"></div>
+<input type="file" id="file-importa" accept=".html,.htm,.json,text/html,application/json" hidden>
+
+<script id="dati-incorporati" type="application/json">null</script>
+
+<script>
+/* Se la pagina non parte, mostra l'errore invece di restare bianca */
+window.addEventListener('error', function (e) {
+  var v = document.getElementById('vista');
+  if (v && !v.firstChild) v.innerHTML = '<p class="vuoto-msg">La pagina non si è avviata.<br><small>' + String(e.message || e).replace(/</g, '&lt;') + ' (riga ' + (e.lineno || '?') + ':' + (e.colno || '?') + ')</small></p>';
+});
+</script>
+
+<script>
+'use strict';
+/* Copia della pagina "pulita": serve per rigenerare il file con i dati dentro. */
+const MODELLO = document.documentElement.cloneNode(true);
+
+/* ============================ Utilità ============================ */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Math.random().toString(36).slice(2, 10);
+const pad = n => String(n).padStart(2, '0');
+const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const dataDa = s => { const [y, m, g] = s.split('-').map(Number); return new Date(y, m - 1, g); };
+const piuGiorni = (s, n) => { const d = dataDa(s); d.setDate(d.getDate() + n); return iso(d); };
+const diffGiorni = (a, b) => Math.round((dataDa(b) - dataDa(a)) / 864e5);
+const oggi = () => iso(new Date());
+const GIORNI = ['domenica','lunedì','martedì','mercoledì','giovedì','venerdì','sabato'];
+const MESI = ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
+const maiusc = s => s.charAt(0).toUpperCase() + s.slice(1);
+const fmtGiorno = s => { const d = dataDa(s); return `${GIORNI[d.getDay()]} ${d.getDate()} ${MESI[d.getMonth()]}`; };
+const fmtBreve = s => { const d = dataDa(s); return `${d.getDate()} ${MESI[d.getMonth()].slice(0, 3)} ${d.getFullYear()}`; };
+const inizioMese = ym => ym + '-01';
+const fineMese = ym => { const [y, m] = ym.split('-').map(Number); return iso(new Date(y, m, 0)); };
+const meseDi = s => s.slice(0, 7);
+const lunediDi = s => { const d = dataDa(s); const g = (d.getDay() + 6) % 7; return piuGiorni(s, -g); };
+
+function etichettaPeriodo(da, a) {
+  const d1 = dataDa(da), d2 = dataDa(a);
+  if (da === inizioMese(meseDi(da)) && a === fineMese(meseDi(da))) return `${maiusc(MESI[d1.getMonth()])} ${d1.getFullYear()}`;
+  if (da === a) return `${maiusc(fmtGiorno(da))} ${d1.getFullYear()}`;
+  if (d1.getFullYear() !== d2.getFullYear()) return `dal ${d1.getDate()} ${MESI[d1.getMonth()]} ${d1.getFullYear()} al ${d2.getDate()} ${MESI[d2.getMonth()]} ${d2.getFullYear()}`;
+  if (d1.getMonth() !== d2.getMonth()) return `dal ${d1.getDate()} ${MESI[d1.getMonth()]} al ${d2.getDate()} ${MESI[d2.getMonth()]} ${d2.getFullYear()}`;
+  return `dal ${d1.getDate()} al ${d2.getDate()} ${MESI[d2.getMonth()]} ${d2.getFullYear()}`;
+}
+
+/* ============================ Dati ============================ */
+const CHIAVE_LS = 'turnazione_lettori_v1';
+const CHIAVE_TS = 'turnazione_lettori_ts_file';
+const RUOLI_DEF = ['Prima lettura', 'Salmo', 'Seconda lettura', 'Preghiera dei fedeli'];
+let DB, TS_FILE = '', maniglia = null, annullo = null;
+
+/* Modalità online (pagina aperta dal sito): i dati stanno nel Foglio Google e si salvano da soli.
+   Aperta come file dal disco, la pagina lavora invece in locale. */
+const ONLINE = location.protocol === 'https:' || location.protocol === 'http:';
+const URL_API = 'https:/' + '/script.google.com/macros/s/AKfycbxBedO7XrrihtkIhha4iFIamL2DQKQ_8QMjUr3spXCxeF3B7KZZc-FjSqSWYda8JMqm/exec';
+const CHIAVE_COD = 'turnazione_lettori_codice';
+const URL_WA = 'https:/' + '/wa.me/';
+let SOLA_LETTURA = false, SENZA_CODICE = false, CODICE = '', BASE = '', URL_FOGLIO = '';
+let invioTimer = null, invioInCorso = false, invioAttesa = false, statoRete = 'ok';
+/* Niente cookie né account Google di chi apre la pagina: la richiesta è sempre anonima e il codice viaggia solo nel corpo */
+const srv = (fn, ...args) => fetch(URL_API, { method: 'POST', credentials: 'omit', redirect: 'follow', referrerPolicy: 'no-referrer',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn, args }) })
+  .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+  .then(r => { if (r && r.erroreServer) throw new Error(r.erroreServer); return r; });
+const UI = { tab: 'turni', mese: meseDi(oggi()), filtro: '', cerca: '', anno: new Date().getFullYear(),
+  esp: { da: lunediDi(oggi()), a: piuGiorni(lunediDi(oggi()), 6), parr: '' } };
+
+function datiIniziali() {
+  const p1 = uid(), p2 = uid();
+  return {
+    v: 1, aggiornato: '', conSalmo: true,
+    impostazioni: { titolo: 'Turnazione Lettori', nota: '', riposo: 8 },
+    parrocchie: [{ id: p1, nome: 'Parrocchia 1', colore: '#4a9be0' }, { id: p2, nome: 'Parrocchia 2', colore: '#f0a04b' }],
+    messe: [
+      { id: uid(), parrocchiaId: p1, giorno: 6, ora: '18:00', nome: 'Prefestiva', ruoli: [...RUOLI_DEF], attiva: true },
+      { id: uid(), parrocchiaId: p1, giorno: 0, ora: '10:30', nome: '', ruoli: [...RUOLI_DEF], attiva: true },
+      { id: uid(), parrocchiaId: p2, giorno: 0, ora: '09:00', nome: '', ruoli: [...RUOLI_DEF], attiva: true }
+    ],
+    lettori: [], celebrazioni: [], saltate: [], turni: {}
+  };
+}
+function normalizza(d) {
+  const b = datiIniziali();
+  d.impostazioni = Object.assign({ titolo: 'Turnazione Lettori', nota: '', riposo: 8 }, d.impostazioni || {});
+  if (!Array.isArray(d.parrocchie) || !d.parrocchie.length) d.parrocchie = b.parrocchie;
+  for (const k of ['messe', 'lettori', 'celebrazioni', 'saltate']) if (!Array.isArray(d[k])) d[k] = [];
+  if (!d.turni || typeof d.turni !== 'object') d.turni = {};
+  for (const l of d.lettori) { l.parrocchie = l.parrocchie || []; l.messe = l.messe || []; l.assenze = l.assenze || []; }
+  d.aggiornato = d.aggiornato || '';
+  /* Dati creati prima dell'aggiunta del Salmo: lo inserisce dopo la prima lettura, senza spostare i turni già assegnati */
+  if (!d.conSalmo) {
+    for (const m of [...d.messe, ...d.celebrazioni]) {
+      if (!Array.isArray(m.ruoli) || m.ruoli.some(r => /salm/i.test(r))) continue;
+      const i = Math.min(1, m.ruoli.length);
+      m.ruoli.splice(i, 0, 'Salmo');
+      for (const k in d.turni) {
+        if (!k.endsWith('|' + m.id) || !Array.isArray(d.turni[k])) continue;
+        while (d.turni[k].length < i) d.turni[k].push(null);
+        d.turni[k].splice(i, 0, null);
+      }
+    }
+    d.conSalmo = true;
+  }
+  return d;
+}
+function leggiLS(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function scriviLS(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } }
+
+function carica() {
+  let inc = null, loc = null;
+  try { inc = JSON.parse($('#dati-incorporati').textContent); } catch (e) {}
+  try { loc = JSON.parse(leggiLS(CHIAVE_LS)); } catch (e) {}
+  if (loc && (!inc || (loc.aggiornato || '') >= (inc.aggiornato || ''))) DB = loc;
+  else DB = inc || datiIniziali();
+  normalizza(DB);
+  const tsLs = leggiLS(CHIAVE_TS) || '';
+  TS_FILE = [inc && inc.aggiornato || '', tsLs].sort().pop();
+}
+function salva() {
+  DB.aggiornato = new Date().toISOString();
+  if (ONLINE) { if (!SOLA_LETTURA) programmaInvio(); }
+  else scriviLS(CHIAVE_LS, JSON.stringify(DB));
+  aggiornaStato();
+}
+function programmaInvio(ritardo) {
+  invioAttesa = true; if (statoRete !== 'invio') statoRete = 'attesa';
+  clearTimeout(invioTimer); invioTimer = setTimeout(invia, ritardo || 900);
+}
+async function invia() {
+  if (invioInCorso || !invioAttesa) return;
+  clearTimeout(invioTimer);
+  invioInCorso = true; invioAttesa = false; statoRete = 'invio'; aggiornaStato();
+  const ts = DB.aggiornato;
+  try {
+    const r = await srv('scrivi', CODICE, JSON.stringify(DB), BASE);
+    if (r && r.ok) { BASE = ts; statoRete = invioAttesa ? 'attesa' : 'ok'; }
+    else if (r && r.conflitto) {
+      invioAttesa = false; statoRete = 'ok';
+      alert('I dati sono stati modificati nel frattempo da un altro dispositivo.\nCarico la versione aggiornata: ripeti la tua ultima modifica.');
+      await caricaOnline();
+    } else if (r && r.negato) {
+      invioAttesa = false; statoRete = 'ok'; CODICE = ''; scriviLS(CHIAVE_COD, '');
+      alert('Il codice di modifica non è più valido. Inseriscilo di nuovo per modificare.');
+      await caricaOnline();
+    } else { statoRete = 'errore'; invioAttesa = true; toast((r && r.errore) || 'Salvataggio non riuscito'); }
+  } catch (e) { statoRete = 'errore'; invioAttesa = true; }
+  invioInCorso = false; aggiornaStato();
+  if (invioAttesa) { clearTimeout(invioTimer); invioTimer = setTimeout(invia, statoRete === 'errore' ? 10000 : 300); }
+}
+function applicaServer(r) {
+  DB = normalizza(r.dati ? JSON.parse(r.dati) : datiIniziali());
+  BASE = DB.aggiornato; SOLA_LETTURA = !r.modifica; SENZA_CODICE = !r.codiceImpostato; URL_FOGLIO = r.foglio || '';
+  if (SOLA_LETTURA && UI.tab !== 'turni' && UI.tab !== 'esporta') UI.tab = 'turni';
+  render();
+}
+async function caricaOnline() { applicaServer(await srv('leggi', CODICE)); }
+async function avviaOnline() {
+  CODICE = leggiLS(CHIAVE_COD) || '';
+  $('#vista').innerHTML = '<p class="vuoto-msg">Caricamento…</p>';
+  try { await caricaOnline(); }
+  catch (e) { $('#vista').innerHTML = '<p class="vuoto-msg">Non riesco a caricare i dati.<br>Controlla la connessione e ricarica la pagina.</p>'; }
+}
+async function accedi() {
+  const c = (prompt('Codice di modifica:') || '').trim();
+  if (!c) return;
+  toast('Verifica in corso…');
+  try {
+    const r = await srv('leggi', c);
+    if (!r.modifica) return toast('Codice non valido');
+    CODICE = c; scriviLS(CHIAVE_COD, c); applicaServer(r); toast('Ora puoi modificare');
+  } catch (e) { toast('Errore di connessione'); }
+}
+function aggiornaStato() {
+  const b = $('#btn-salva');
+  $$('#tabs button').forEach(x => x.hidden = SOLA_LETTURA && x.dataset.tab !== 'turni' && x.dataset.tab !== 'esporta');
+  if (ONLINE) {
+    b.classList.toggle('da-salvare', !SOLA_LETTURA && statoRete === 'errore');
+    b.textContent = SOLA_LETTURA ? '🔒 Modifica' : ({ ok: '✓ Salvato', attesa: 'Salvataggio…', invio: 'Salvataggio…', errore: '⚠ Non salvato: riprova' })[statoRete];
+    $('#titolo-app').textContent = document.title = DB.impostazioni.titolo || 'Turnazione Lettori';
+    return;
+  }
+  const sporco = (DB.aggiornato || '') > TS_FILE;
+  b.classList.toggle('da-salvare', sporco);
+  b.textContent = sporco ? '💾 Salva file •' : '💾 Salva file';
+  $('#titolo-app').textContent = DB.impostazioni.titolo || 'Turnazione Lettori';
+  document.title = DB.impostazioni.titolo || 'Turnazione Lettori';
+}
+
+const parr = id => DB.parrocchie.find(p => p.id === id) || { id, nome: '(parrocchia eliminata)', colore: '#9aa7b4' };
+const lettore = id => id ? DB.lettori.find(l => l.id === id) : null;
+const lettoriOrd = () => [...DB.lettori].sort((a, b) => a.nome.localeCompare(b.nome, 'it'));
+const ordParr = id => { const i = DB.parrocchie.findIndex(p => p.id === id); return i < 0 ? 99 : i; };
+
+/* Elenco delle celebrazioni (messe ricorrenti + celebrazioni speciali) in un periodo */
+function eventi(da, a, opz = {}) {
+  const out = [];
+  const saltate = new Set(DB.saltate);
+  for (let g = da; g <= a; g = piuGiorni(g, 1)) {
+    const dow = dataDa(g).getDay();
+    for (const m of DB.messe) {
+      if (m.attiva === false || m.giorno !== dow) continue;
+      out.push({ chiave: g + '|' + m.id, data: g, ora: m.ora, parrocchiaId: m.parrocchiaId, nome: m.nome || '', ruoli: m.ruoli, origineId: m.id, speciale: false });
+    }
+    for (const c of DB.celebrazioni) {
+      if (c.data !== g) continue;
+      out.push({ chiave: g + '|' + c.id, data: g, ora: c.ora, parrocchiaId: c.parrocchiaId, nome: c.nome || '', ruoli: c.ruoli, origineId: c.id, speciale: true });
+    }
+  }
+  return out
+    .map(e => (e.saltata = saltate.has(e.chiave), e))
+    .filter(e => (opz.conSaltate || !e.saltata) && (!opz.parrocchia || e.parrocchiaId === opz.parrocchia))
+    .sort((x, y) => x.data.localeCompare(y.data) || x.ora.localeCompare(y.ora) || ordParr(x.parrocchiaId) - ordParr(y.parrocchiaId));
+}
+function eventoDaChiave(k) {
+  const data = k.split('|')[0];
+  return eventi(data, data, { conSaltate: true }).find(e => e.chiave === k);
+}
+function getTurno(e) {
+  const t = (DB.turni[e.chiave] || []).slice(0, e.ruoli.length);
+  while (t.length < e.ruoli.length) t.push(null);
+  return t.map(id => (id && lettore(id)) ? id : null);
+}
+
+/* ============================ Turnazione equa ============================ */
+const assente = (l, data) => (l.assenze || []).some(x => x.da && data >= x.da && data <= (x.a || x.da));
+function idoneo(l, e) {
+  if (l.attivo === false) return false;
+  if (!l.parrocchie.includes(e.parrocchiaId)) return false;
+  if (assente(l, e.data)) return false;
+  if (!e.speciale && l.messe && l.messe.length) {
+    /* la preferenza vale per parrocchia: se in questa parrocchia ha scelto delle messe, legge solo in quelle */
+    const diQuesta = DB.messe.filter(m => m.parrocchiaId === e.parrocchiaId && l.messe.includes(m.id));
+    if (diQuesta.length && !diQuesta.some(m => m.id === e.origineId)) return false;
+  }
+  return true;
+}
+function conta(da, a) {
+  const st = {};
+  for (const e of eventi(da, a)) {
+    getTurno(e).forEach((id, i) => {
+      if (!id) return;
+      const s = st[id] || (st[id] = { tot: 0, ruoli: {}, date: [], parr: {} });
+      s.tot++; s.date.push(e.data);
+      s.ruoli[e.ruoli[i]] = (s.ruoli[e.ruoli[i]] || 0) + 1;
+      s.parr[e.parrocchiaId] = (s.parr[e.parrocchiaId] || 0) + 1;
+    });
+  }
+  return st;
+}
+function registra(st, id, e, i) {
+  const s = st[id] || (st[id] = { tot: 0, ruoli: {}, date: [], parr: {} });
+  s.tot++; s.date.push(e.data);
+  s.ruoli[e.ruoli[i]] = (s.ruoli[e.ruoli[i]] || 0) + 1;
+}
+/* Sceglie il lettore più "giusto": meno turni fatti, più riposo dall'ultimo turno, rotazione dei ruoli */
+function scegli(e, i, t, st) {
+  const riposo = Number(DB.impostazioni.riposo) || 0;
+  let migliore = null, minimo = Infinity;
+  for (const l of DB.lettori) {
+    if (!idoneo(l, e) || t.includes(l.id)) continue;
+    const s = st[l.id] || { tot: 0, ruoli: {}, date: [] };
+    let dist = 90, stessoGiorno = false;
+    for (const d of s.date) {
+      if (d === e.data) { stessoGiorno = true; continue; }
+      dist = Math.min(dist, Math.abs(diffGiorni(d, e.data)));
+    }
+    let p = s.tot * 1000;
+    if (stessoGiorno) p += 5000;
+    if (riposo && dist < riposo) p += 1500;
+    p -= dist * 2;
+    p += (s.ruoli[e.ruoli[i]] || 0) * 30;
+    p += Math.random() * 20;
+    if (p < minimo) { minimo = p; migliore = l.id; }
+  }
+  return migliore;
+}
+function genera(da, a, rigenera, parrId) {
+  const inizio = piuGiorni(da, -180);
+  const bersaglio = e => e.data >= da && (!parrId || e.parrocchiaId === parrId);
+  if (rigenera) for (const e of eventi(da, a)) if (bersaglio(e)) delete DB.turni[e.chiave];
+  const st = conta(inizio, a);
+  let assegnati = 0, scoperti = 0;
+  for (const e of eventi(da, a)) {
+    if (!bersaglio(e)) continue;
+    const t = getTurno(e);
+    for (let i = 0; i < t.length; i++) {
+      if (t[i]) continue;
+      const id = scegli(e, i, t, st);
+      if (id) { t[i] = id; registra(st, id, e, i); assegnati++; } else scoperti++;
+    }
+    DB.turni[e.chiave] = t;
+  }
+  return { assegnati, scoperti };
+}
+
+/* ============================ Interfaccia: base ============================ */
+function toast(msg, etichetta, azione) {
+  const t = $('#toast');
+  t.innerHTML = `<span>${esc(msg)}</span>` + (etichetta ? `<button id="toast-az">${esc(etichetta)}</button>` : '');
+  t.classList.add('su');
+  if (etichetta) $('#toast-az').onclick = () => { t.classList.remove('su'); azione(); };
+  clearTimeout(toast.t);
+  toast.t = setTimeout(() => t.classList.remove('su'), etichetta ? 8000 : 3200);
+}
+function apriDlg(titolo, corpo, piede) {
+  const d = $('#dlg');
+  d.innerHTML = `<div class="dlg-testa"><h3>${esc(titolo)}</h3><button class="btn icona piccolo" data-a="chiudi" aria-label="Chiudi">✕</button></div>
+    <div class="dlg-corpo">${corpo}</div><div class="dlg-piede">${piede || ''}</div>`;
+  if (!d.open) d.showModal();
+  d.scrollTop = 0;
+}
+function chiudiDlg() { const d = $('#dlg'); if (d.open) d.close(); }
+function selParrocchie(valore, conTutte) {
+  return (conTutte ? `<option value="">Tutte le parrocchie</option>` : '') +
+    DB.parrocchie.map(p => `<option value="${p.id}" ${p.id === valore ? 'selected' : ''}>${esc(p.nome)}</option>`).join('');
+}
+function render() {
+  $$('#tabs button').forEach(b => b.classList.toggle('attivo', b.dataset.tab === UI.tab));
+  const v = $('#vista');
+  v.innerHTML = ({ turni: vistaTurni, lettori: vistaLettori, messe: vistaMesse, esporta: vistaEsporta, altro: vistaAltro })[UI.tab]();
+  if (UI.tab === 'lettori') elencoLettori();
+  aggiornaStato();
+}
+
+/* ============================ Vista: Turni ============================ */
+function vistaTurni() {
+  const da = inizioMese(UI.mese), a = fineMese(UI.mese), og = oggi();
+  const [y, m] = UI.mese.split('-').map(Number);
+  const evs = eventi(da, a, { conSaltate: true, parrocchia: UI.filtro || null });
+  const tuttiMese = eventi(da, a);
+  const perGiorno = {};
+  for (const e of tuttiMese) for (const id of getTurno(e)) if (id) { (perGiorno[e.data] = perGiorno[e.data] || {})[id] = (perGiorno[e.data][id] || 0) + 1; }
+  let scoperti = 0, celebrazioni = 0;
+  for (const e of evs) if (!e.saltata) { celebrazioni++; scoperti += getTurno(e).filter(x => !x).length; }
+
+  let h = `<div class="mese-nav">
+      <button class="btn icona" data-a="mese" data-d="-1" aria-label="Mese precedente">‹</button>
+      <h2>${MESI[m - 1]} ${y}</h2>
+      <button class="btn icona" data-a="mese" data-d="1" aria-label="Mese successivo">›</button>
+    </div>
+    ${ONLINE && SENZA_CODICE && !SOLA_LETTURA ? `<div class="scheda mb"><h3>Proteggi i dati</h3>
+      <p class="tenue piccolo-t" style="margin:0 0 10px">Adesso chiunque abbia il link può modificare. Scegli un codice: chi ha il link vedrà i turni, ma solo chi conosce il codice potrà cambiarli.</p>
+      <button class="btn primario" data-a="imposta-codice">Scegli il codice di modifica</button></div>` : ''}
+    <div class="riga">
+      ${SOLA_LETTURA ? '' : `<button class="btn primario cresce" data-a="dlg-genera">✨ Genera turni</button>`}
+      <button class="btn ${SOLA_LETTURA ? 'cresce' : ''}" data-a="mese-oggi">Oggi</button>
+    </div>
+    <div class="riga mt">
+      <select class="cresce" data-c="filtro" aria-label="Filtra per parrocchia">${selParrocchie(UI.filtro, true)}</select>
+    </div>
+    <p class="tenue piccolo-t mb" style="margin-top:10px">${celebrazioni} celebrazioni · ${scoperti ? `<b style="color:var(--allarme)">${scoperti} posti da assegnare</b>` : 'tutti i posti assegnati ✓'}</p>`;
+
+  if (!DB.lettori.length && !SOLA_LETTURA) {
+    h += `<div class="scheda"><h3>Per iniziare</h3>
+      <p class="tenue" style="margin:0 0 10px">1. Controlla parrocchie e orari nella scheda <b>Messe</b>.<br>2. Inserisci i lettori nella scheda <b>Lettori</b>.<br>3. Torna qui e premi <b>Genera turni</b>: il programma distribuisce i turni in modo equo.</p>
+      <div class="riga"><button class="btn primario" data-a="tab" data-tab="lettori">Aggiungi i lettori</button>
+      <button class="btn" data-a="esempio">Prova con dati di esempio</button></div></div>`;
+  }
+  if (!evs.length) h += `<p class="vuoto-msg">Nessuna celebrazione in questo mese.${SOLA_LETTURA ? '' : '<br>Aggiungi le messe nella scheda <b>Messe</b>.'}</p>`;
+
+  let giorno = '';
+  for (const e of evs) {
+    if (e.saltata && SOLA_LETTURA) continue;
+    if (e.data !== giorno) {
+      if (giorno) h += `</div></section>`;
+      giorno = e.data;
+      h += `<section class="giorno ${e.data < og ? 'passato' : ''}" id="g-${e.data}"><h3>${fmtGiorno(e.data)}${e.data === og ? ' <span class="tag">oggi</span>' : ''}</h3><div class="eventi">`;
+    }
+    const p = parr(e.parrocchiaId);
+    if (e.saltata) {
+      h += `<article class="evento sospesa" style="--c:${esc(p.colore)}"><header><span class="ora">${esc(e.ora)}</span><span class="badge" style="--c:${esc(p.colore)}">${esc(p.nome)}</span>
+        <span class="tenue cresce">non si celebra</span><button class="link" data-a="salta" data-k="${e.chiave}">Ripristina</button></header></article>`;
+      continue;
+    }
+    const t = getTurno(e);
+    h += `<article class="evento" style="--c:${esc(p.colore)}"><header><span class="ora">${esc(e.ora)}</span>
+      <span class="badge" style="--c:${esc(p.colore)}">${esc(p.nome)}</span>
+      <span class="tenue cresce piccolo-t">${esc(e.nome)}${e.speciale ? ' <span class="tag">speciale</span>' : ''}</span>
+      ${SOLA_LETTURA ? '' : `<button class="link" data-a="salta" data-k="${e.chiave}" title="Segna che in questa data la messa non si celebra">Sospendi</button>`}</header>`;
+    e.ruoli.forEach((r, i) => {
+      const l = lettore(t[i]);
+      if (SOLA_LETTURA) { h += `<div class="ruolo"><span>${esc(r)}</span>${l ? `<b>${esc(l.nome)}</b>` : '<b class="manca">da assegnare</b>'}</div>`; return; }
+      let avviso = '';
+      if (l) {
+        if (assente(l, e.data)) avviso = 'Risulta assente in questa data';
+        else if (l.attivo === false) avviso = 'Lettore non attivo';
+        else if ((perGiorno[e.data] || {})[l.id] > 1) avviso = 'Ha più turni in questo giorno';
+        else if (!l.parrocchie.includes(e.parrocchiaId)) avviso = 'Non è tra i lettori di questa parrocchia';
+      }
+      h += `<div class="ruolo"><span>${esc(r)}</span>
+        <select class="${l ? (avviso ? 'avviso' : '') : 'vuoto'}" data-c="assegna" data-k="${e.chiave}" data-i="${i}" aria-label="${esc(r)}">${opzioniLettori(e, t[i])}</select>
+        ${avviso ? `<div class="nota-avviso">⚠ ${avviso}</div>` : ''}</div>`;
+    });
+    h += `</article>`;
+  }
+  if (giorno) h += `</div></section>`;
+  return h;
+}
+function opzioniLettori(e, attuale) {
+  const si = [], no = [];
+  for (const l of lettoriOrd()) {
+    if (l.id !== attuale && (l.attivo === false || !l.parrocchie.includes(e.parrocchiaId))) continue;
+    (idoneo(l, e) ? si : no).push(l);
+  }
+  const o = l => `<option value="${l.id}" ${l.id === attuale ? 'selected' : ''}>${esc(l.nome)}</option>`;
+  return `<option value="">— da assegnare —</option><option value="*">✨ Scegli tu (automatico)</option>` +
+    si.map(o).join('') + (no.length ? `<optgroup label="Non disponibili">${no.map(o).join('')}</optgroup>` : '');
+}
+function dlgGenera() {
+  const og = oggi();
+  let da = inizioMese(UI.mese), a = fineMese(UI.mese);
+  if (da < og && a >= og) da = og;
+  apriDlg('Genera turni', `
+    <p class="tenue piccolo-t">Il programma assegna i lettori in modo equo: chi ha letto meno viene scelto per primo, rispettando assenze, parrocchie e riposo minimo.</p>
+    <div class="riga">
+      <label class="campo cresce">Dal<input type="date" id="g-da" value="${da}"></label>
+      <label class="campo cresce">Al<input type="date" id="g-a" value="${a}"></label>
+    </div>
+    <label class="campo">Parrocchia<select id="g-parr">${selParrocchie(UI.filtro, true)}</select></label>
+    <div class="gruppo mt">
+      <label class="spunta"><input type="radio" name="g-modo" value="completa" checked> Completa solo i posti vuoti</label>
+      <label class="spunta"><input type="radio" name="g-modo" value="rigenera"> Rifai tutto il periodo da capo</label>
+    </div>`,
+    `<button class="btn" data-a="chiudi">Annulla</button><button class="btn primario" data-a="genera">✨ Genera</button>`);
+}
+
+/* ============================ Vista: Lettori ============================ */
+function vistaLettori() {
+  return `<div class="riga">
+      <button class="btn primario cresce" data-a="dlg-lettore">＋ Nuovo lettore</button>
+      <button class="btn" data-a="dlg-elenco">＋ Elenco di nomi</button>
+    </div>
+    <div class="mt"><input type="search" id="cerca" placeholder="Cerca per nome…" value="${esc(UI.cerca)}" data-i="cerca"></div>
+    <p class="tenue piccolo-t" style="margin:10px 0 0">Il numero a destra indica i turni nell'anno ${new Date().getFullYear()}.</p>
+    <div id="elenco-lettori"></div>`;
+}
+function elencoLettori() {
+  const box = $('#elenco-lettori'); if (!box) return;
+  const anno = new Date().getFullYear();
+  const st = conta(`${anno}-01-01`, `${anno}-12-31`);
+  const q = UI.cerca.trim().toLowerCase(), og = oggi();
+  const lista = lettoriOrd().filter(l => !q || l.nome.toLowerCase().includes(q));
+  if (!lista.length) { box.innerHTML = `<p class="vuoto-msg">${DB.lettori.length ? 'Nessun lettore trovato.' : 'Nessun lettore inserito.<br>Premi «Nuovo lettore» oppure «Elenco di nomi» per inserirli tutti insieme.'}</p>`; return; }
+  box.innerHTML = lista.map(l => {
+    const prossima = (l.assenze || []).filter(x => (x.a || x.da) >= og).sort((x, y) => x.da.localeCompare(y.da))[0];
+    return `<button class="lettore ${l.attivo === false ? 'inattivo' : ''}" data-a="dlg-lettore" data-id="${l.id}">
+      <div class="cresce"><div class="nome">${esc(l.nome)} ${l.attivo === false ? '<span class="tag">non attivo</span>' : ''}</div>
+        <div style="margin-top:4px">${l.parrocchie.map(id => `<span class="badge" style="--c:${esc(parr(id).colore)}">${esc(parr(id).nome)}</span>`).join(' ') || '<span class="tag rosso">nessuna parrocchia</span>'}
+        ${prossima ? `<span class="tag">assente ${fmtBreve(prossima.da)}${prossima.a && prossima.a !== prossima.da ? ' → ' + fmtBreve(prossima.a) : ''}</span>` : ''}</div>
+      </div><div class="conta">${(st[l.id] || {}).tot || 0}</div></button>`;
+  }).join('');
+}
+function dlgLettore(id) {
+  const l = lettore(id) || { id: '', nome: '', telefono: '', parrocchie: DB.parrocchie.length === 1 ? [DB.parrocchie[0].id] : [], messe: [], assenze: [], attivo: true, note: '' };
+  const messeHtml = DB.parrocchie.map(p => {
+    const mm = DB.messe.filter(m => m.parrocchiaId === p.id);
+    if (!mm.length) return '';
+    return `<div class="piccolo-t tenue" style="margin-top:8px">${esc(p.nome)}</div>` + mm.map(m =>
+      `<label class="spunta"><input type="checkbox" class="l-messa" value="${m.id}" ${l.messe.includes(m.id) ? 'checked' : ''}> ${maiusc(GIORNI[m.giorno])} ore ${esc(m.ora)} ${m.nome ? '· ' + esc(m.nome) : ''}</label>`).join('');
+  }).join('');
+  apriDlg(id ? 'Modifica lettore' : 'Nuovo lettore', `
+    <input type="hidden" id="l-id" value="${esc(l.id)}">
+    <label class="campo">Nome e cognome<input type="text" id="l-nome" value="${esc(l.nome)}" autocomplete="off"></label>
+    <label class="campo">Cellulare (per i promemoria WhatsApp)<input type="tel" id="l-tel" value="${esc(l.telefono || '')}" placeholder="es. 333 1234567"></label>
+    <label class="campo">Legge in</label>
+    <div class="gruppo">${DB.parrocchie.map(p => `<label class="spunta"><input type="checkbox" class="l-parr" value="${p.id}" ${l.parrocchie.includes(p.id) ? 'checked' : ''}> <span class="badge" style="--c:${esc(p.colore)}">${esc(p.nome)}</span></label>`).join('')}</div>
+    <label class="campo">Messe preferite <span style="font-weight:400">(nessuna spunta = va bene qualsiasi messa)</span></label>
+    <div class="gruppo">${messeHtml || '<p class="tenue piccolo-t">Nessuna messa configurata.</p>'}</div>
+    <label class="campo">Periodi di assenza (ferie, impegni…)</label>
+    <div id="l-assenze">${(l.assenze || []).map(rigaAssenza).join('')}</div>
+    <button class="btn piccolo mt" data-a="piu-assenza">＋ Aggiungi assenza</button>
+    <label class="campo">Note<input type="text" id="l-note" value="${esc(l.note || '')}"></label>
+    <label class="spunta mt"><input type="checkbox" id="l-attivo" ${l.attivo === false ? '' : 'checked'}> Attivo (partecipa alla turnazione)</label>`,
+    (id ? `<button class="btn pericolo" data-a="elimina-lettore" data-id="${id}">Elimina</button>` : '') +
+    `<button class="btn" data-a="chiudi">Annulla</button><button class="btn primario" data-a="salva-lettore">Salva</button>`);
+}
+function rigaAssenza(x) {
+  x = x || { da: '', a: '' };
+  return `<div class="assenza"><input type="date" class="as-da" value="${esc(x.da)}" aria-label="Assente dal"><input type="date" class="as-a" value="${esc(x.a || x.da)}" aria-label="Assente fino al"><button class="btn icona piccolo" data-a="meno-assenza" aria-label="Rimuovi">✕</button></div>`;
+}
+function dlgElenco() {
+  apriDlg('Aggiungi più lettori', `
+    <p class="tenue piccolo-t">Scrivi un nome per riga. Potrai completare telefono e preferenze dopo.</p>
+    <textarea id="el-nomi" placeholder="Mario Rossi&#10;Anna Bianchi&#10;…"></textarea>
+    <label class="campo">Leggono in</label>
+    <div class="gruppo">${DB.parrocchie.map(p => `<label class="spunta"><input type="checkbox" class="el-parr" value="${p.id}"> <span class="badge" style="--c:${esc(p.colore)}">${esc(p.nome)}</span></label>`).join('')}</div>`,
+    `<button class="btn" data-a="chiudi">Annulla</button><button class="btn primario" data-a="salva-elenco">Aggiungi</button>`);
+}
+
+/* ============================ Vista: Messe ============================ */
+function vistaMesse() {
+  let h = `<div class="scheda"><h3>Parrocchie</h3>`;
+  h += DB.parrocchie.map(p => `<div class="riga mb">
+      <input type="color" value="${esc(p.colore)}" data-c="parr-colore" data-id="${p.id}" aria-label="Colore">
+      <input type="text" class="cresce" style="width:auto" value="${esc(p.nome)}" data-c="parr-nome" data-id="${p.id}" aria-label="Nome parrocchia">
+      ${DB.parrocchie.length > 1 ? `<button class="btn icona pericolo" data-a="elimina-parr" data-id="${p.id}" aria-label="Elimina parrocchia">🗑</button>` : ''}
+    </div>`).join('');
+  h += `<button class="btn piccolo" data-a="piu-parr">＋ Aggiungi parrocchia</button></div>`;
+
+  for (const p of DB.parrocchie) {
+    const mm = DB.messe.filter(m => m.parrocchiaId === p.id).sort((a, b) => ((a.giorno + 1) % 7) - ((b.giorno + 1) % 7) || a.ora.localeCompare(b.ora));
+    h += `<div class="scheda"><h3><span class="badge" style="--c:${esc(p.colore)}">${esc(p.nome)}</span> Messe con i lettori</h3>`;
+    h += mm.length ? mm.map(m => `<button class="lettore ${m.attiva === false ? 'inattivo' : ''}" data-a="dlg-messa" data-id="${m.id}">
+        <div class="cresce"><div class="nome">${maiusc(GIORNI[m.giorno])} · ore ${esc(m.ora)} ${m.nome ? '· ' + esc(m.nome) : ''} ${m.attiva === false ? '<span class="tag">sospesa</span>' : ''}</div>
+        <div class="tenue piccolo-t">${m.ruoli.map(esc).join(' · ')}</div></div><span class="tenue">✎</span></button>`).join('')
+      : `<p class="tenue piccolo-t">Nessuna messa.</p>`;
+    h += `<button class="btn piccolo mt" data-a="dlg-messa" data-parr="${p.id}">＋ Aggiungi messa</button></div>`;
+  }
+
+  const og = oggi();
+  const cc = [...DB.celebrazioni].sort((a, b) => a.data.localeCompare(b.data) || a.ora.localeCompare(b.ora));
+  h += `<div class="scheda"><h3>Celebrazioni speciali</h3>
+    <p class="tenue piccolo-t" style="margin-top:0">Natale, Veglia pasquale, festa patronale, cresime… una data precisa fuori dall'orario abituale.</p>`;
+  h += cc.length ? cc.map(c => `<button class="lettore ${c.data < og ? 'inattivo' : ''}" data-a="dlg-messa" data-spec="1" data-id="${c.id}">
+      <div class="cresce"><div class="nome">${esc(c.nome || 'Celebrazione')} · ${fmtBreve(c.data)} ore ${esc(c.ora)}</div>
+      <div class="tenue piccolo-t"><span class="badge" style="--c:${esc(parr(c.parrocchiaId).colore)}">${esc(parr(c.parrocchiaId).nome)}</span> ${c.ruoli.map(esc).join(' · ')}</div></div><span class="tenue">✎</span></button>`).join('')
+    : '';
+  h += `<button class="btn piccolo mt" data-a="dlg-messa" data-spec="1">＋ Aggiungi celebrazione speciale</button></div>`;
+  return h;
+}
+function dlgMessa(id, speciale, parrId) {
+  const esiste = speciale ? DB.celebrazioni.find(c => c.id === id) : DB.messe.find(m => m.id === id);
+  const m = esiste || { id: '', parrocchiaId: parrId || DB.parrocchie[0].id, giorno: 0, data: oggi(), ora: '10:30', nome: '', ruoli: [...RUOLI_DEF], attiva: true };
+  apriDlg(speciale ? (esiste ? 'Modifica celebrazione' : 'Nuova celebrazione speciale') : (esiste ? 'Modifica messa' : 'Nuova messa'), `
+    <input type="hidden" id="m-id" value="${esc(m.id)}"><input type="hidden" id="m-spec" value="${speciale ? 1 : ''}">
+    <label class="campo">Parrocchia<select id="m-parr">${selParrocchie(m.parrocchiaId)}</select></label>
+    <div class="riga">
+      ${speciale
+        ? `<label class="campo cresce">Data<input type="date" id="m-data" value="${esc(m.data)}"></label>`
+        : `<label class="campo cresce">Giorno<select id="m-giorno">${[0, 1, 2, 3, 4, 5, 6].map(g => `<option value="${g}" ${g === m.giorno ? 'selected' : ''}>${maiusc(GIORNI[g])}</option>`).join('')}</select></label>`}
+      <label class="campo cresce">Ora<input type="time" id="m-ora" value="${esc(m.ora)}"></label>
+    </div>
+    <label class="campo">Nome ${speciale ? '' : '(facoltativo)'}<input type="text" id="m-nome" value="${esc(m.nome || '')}" placeholder="${speciale ? 'es. Messa di Natale' : 'es. Prefestiva, Messa dei ragazzi'}"></label>
+    <label class="campo">Letture e salmo da assegnare (separati da virgola)<input type="text" id="m-ruoli" value="${esc(m.ruoli.join(', '))}"></label>
+    <p class="tenue piccolo-t">Ogni voce è un lettore da assegnare. Esempio: Prima lettura, Salmo, Seconda lettura, Preghiera dei fedeli.</p>
+    ${speciale ? '' : `<label class="spunta"><input type="checkbox" id="m-attiva" ${m.attiva === false ? '' : 'checked'}> Messa attiva</label>`}`,
+    (esiste ? `<button class="btn pericolo" data-a="elimina-messa" data-id="${m.id}" data-spec="${speciale ? 1 : ''}">Elimina</button>` : '') +
+    `<button class="btn" data-a="chiudi">Annulla</button><button class="btn primario" data-a="salva-messa">Salva</button>`);
+}
+
+/* ============================ Vista: Invia / Esporta ============================ */
+function vistaEsporta() {
+  const { da, a, parr: pid } = UI.esp;
+  const puoCondividere = !!(navigator.canShare && window.File);
+  const evs = eventi(da, a, { parrocchia: pid || null });
+  /* promemoria personali */
+  const pers = {};
+  for (const e of evs) getTurno(e).forEach((id, i) => { if (id) (pers[id] = pers[id] || []).push({ e, ruolo: e.ruoli[i] }); });
+  const persone = lettoriOrd().filter(l => pers[l.id]);
+  return `<div class="scheda"><h3>Periodo</h3>
+      <div class="riga">
+        <button class="btn piccolo" data-a="periodo" data-p="sett">Questa settimana</button>
+        <button class="btn piccolo" data-a="periodo" data-p="sett+">Prossima settimana</button>
+        <button class="btn piccolo" data-a="periodo" data-p="mese">Questo mese</button>
+        <button class="btn piccolo" data-a="periodo" data-p="mese+">Prossimo mese</button>
+      </div>
+      <div class="riga">
+        <label class="campo cresce">Dal<input type="date" value="${da}" data-c="esp-da"></label>
+        <label class="campo cresce">Al<input type="date" value="${a}" data-c="esp-a"></label>
+      </div>
+      <label class="campo">Parrocchia<select data-c="esp-parr">${selParrocchie(pid, true)}</select></label>
+    </div>
+    <div class="scheda"><h3>Invia al gruppo dei lettori</h3>
+      <div class="riga">
+        ${puoCondividere ? `<button class="btn wa cresce" data-a="condividi-pdf">📎 Condividi PDF (WhatsApp…)</button>` : ''}
+        <button class="btn primario cresce" data-a="scarica-pdf">📄 Scarica PDF</button>
+      </div>
+      <div class="riga mt">
+        <button class="btn wa" style="width:100%" data-a="wa-testo">💬 Invia come messaggio WhatsApp</button>
+      </div>
+      <div class="riga mt">
+        <button class="btn cresce" data-a="copia-testo">Copia testo</button>
+        <button class="btn cresce" data-a="stampa">🖨 Stampa</button>
+      </div>
+      <p class="tenue piccolo-t" style="margin-bottom:0">${puoCondividere ? 'Dal cellulare «Condividi PDF» apre WhatsApp: scegli il gruppo e invia. ' : ''}Dal computer scarica il PDF e trascinalo nel gruppo su WhatsApp Web; in alternativa invia i turni come messaggio di testo.</p>
+    </div>
+    <h3 class="mt2">Anteprima · ${esc(etichettaPeriodo(da, a))}</h3>
+    <div class="anteprima scorri">${tabellaTurni(evs)}</div>
+    <div class="scheda mt2" ${SOLA_LETTURA ? 'hidden' : ''}><h3>Promemoria personali</h3>
+      <p class="tenue piccolo-t" style="margin-top:0">Invia a ciascun lettore solo i suoi turni del periodo.</p>
+      ${persone.length ? persone.map(l => `<div class="riga spazio" style="padding:6px 0;border-top:1px solid var(--bordo)">
+          <div class="cresce"><b>${esc(l.nome)}</b> <span class="tenue piccolo-t">· ${pers[l.id].length} ${pers[l.id].length === 1 ? 'turno' : 'turni'}</span></div>
+          <button class="btn piccolo ${l.telefono ? 'wa' : ''}" data-a="wa-personale" data-id="${l.id}">${l.telefono ? '💬 WhatsApp' : 'Copia testo'}</button></div>`).join('')
+        : `<p class="tenue piccolo-t">Nessun turno assegnato nel periodo.</p>`}
+    </div>`;
+}
+function tabellaTurni(evs) {
+  if (!evs.length) return `<p class="vuoto-msg">Nessuna celebrazione nel periodo scelto.</p>`;
+  let h = '<table>', g = '';
+  for (const e of evs) {
+    if (e.data !== g) { g = e.data; h += `<tr class="g"><td colspan="3">${fmtGiorno(e.data)}</td></tr>`; }
+    const t = getTurno(e), p = parr(e.parrocchiaId);
+    h += `<tr><td style="white-space:nowrap"><b>${esc(e.ora)}</b></td><td><b>${esc(p.nome)}</b>${e.nome ? `<br><span style="font-size:.9em">${esc(e.nome)}</span>` : ''}</td>
+      <td>${e.ruoli.map((r, i) => `${esc(r)}: <b>${lettore(t[i]) ? esc(lettore(t[i]).nome) : '<span style="color:#d9534f">da assegnare</span>'}</b>`).join('<br>')}</td></tr>`;
+  }
+  return h + '</table>';
+}
+function testoTurni(da, a, pid) {
+  const evs = eventi(da, a, { parrocchia: pid || null });
+  let s = `*📖 ${DB.impostazioni.titolo || 'Turnazione Lettori'}*\n_${etichettaPeriodo(da, a)}${pid ? ' · ' + parr(pid).nome : ''}_\n`;
+  let g = '';
+  for (const e of evs) {
+    if (e.data !== g) { g = e.data; s += `\n*${maiusc(fmtGiorno(e.data))}*\n`; }
+    const t = getTurno(e);
+    s += `⛪ ${parr(e.parrocchiaId).nome} · ore ${e.ora}${e.nome ? ' (' + e.nome + ')' : ''}\n`;
+    e.ruoli.forEach((r, i) => { s += `   • ${r}: ${lettore(t[i]) ? lettore(t[i]).nome : '_da assegnare_'}\n`; });
+  }
+  if (!evs.length) s += '\nNessuna celebrazione nel periodo.\n';
+  if (DB.impostazioni.nota) s += `\n${DB.impostazioni.nota}\n`;
+  return s;
+}
+function testoPersonale(l, da, a, pid) {
+  let s = `Ciao ${l.nome.split(' ')[0]}, ti ricordo i tuoi turni di lettura (${etichettaPeriodo(da, a)}):\n`;
+  for (const e of eventi(da, a, { parrocchia: pid || null })) getTurno(e).forEach((id, i) => {
+    if (id === l.id) s += `\n• ${maiusc(fmtGiorno(e.data))}, ore ${e.ora} – ${parr(e.parrocchiaId).nome}${e.nome ? ' (' + e.nome + ')' : ''}: *${e.ruoli[i]}*`;
+  });
+  return s + `\n\nSe non puoi esserci avvisa per tempo. Grazie! 🙏`;
+}
+function numeroWa(tel) {
+  let n = String(tel || '').replace(/\D/g, '');
+  if (!n) return '';
+  if (n.startsWith('00')) n = n.slice(2);
+  else if (n.length <= 10) n = '39' + n;
+  return n;
+}
+function copia(testo) {
+  const fatto = () => toast('Testo copiato: incollalo in WhatsApp');
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(testo).then(fatto, () => copiaVecchio(testo, fatto));
+  else copiaVecchio(testo, fatto);
+}
+function copiaVecchio(testo, fatto) {
+  const ta = document.createElement('textarea'); ta.value = testo; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); fatto(); } catch (e) { toast('Copia non riuscita'); }
+  ta.remove();
+}
+function scarica(blob, nome) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = nome;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 15000);
+}
+
+/* ============================ PDF (generato dentro la pagina, senza internet) ============================ */
+const HELV = [278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584];
+const WIN = { '–': 150, '—': 151, '‘': 145, '’': 146, '“': 147, '”': 148, '•': 149, '…': 133, '€': 128 };
+function codiceWin(ch) { const c = ch.codePointAt(0); return c <= 255 ? c : (WIN[ch] || 0); }
+function largTesto(s, size, bold) {
+  let w = 0;
+  for (const ch of String(s)) {
+    const c = codiceWin(ch); if (!c) continue;
+    let v = HELV[c - 32];
+    if (v === undefined) v = HELV[ch.normalize('NFD').charCodeAt(0) - 32] || 556;
+    w += v;
+  }
+  return w / 1000 * size * (bold ? 1.07 : 1);
+}
+function tronca(s, size, bold, max) {
+  s = String(s);
+  if (largTesto(s, size, bold) <= max) return s;
+  while (s.length > 1 && largTesto(s + '…', size, bold) > max) s = s.slice(0, -1);
+  return s.trimEnd() + '…';
+}
+class Pdf {
+  constructor() { this.pagine = []; this.nuova(); }
+  nuova() { this.c = []; this.pagine.push(this.c); }
+  col(hex) { const n = parseInt(String(hex).replace('#', ''), 16) || 0; return [(n >> 16) & 255, (n >> 8) & 255, n & 255].map(v => (v / 255).toFixed(3)).join(' '); }
+  rett(x, y, w, h, colore) { this.c.push(`${this.col(colore)} rg ${x.toFixed(2)} ${(842 - y - h).toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)} re f`); }
+  linea(x1, y1, x2, y2, colore) { this.c.push(`${this.col(colore)} RG 0.5 w ${x1.toFixed(2)} ${(842 - y1).toFixed(2)} m ${x2.toFixed(2)} ${(842 - y2).toFixed(2)} l S`); }
+  testo(x, y, s, o = {}) {
+    const size = o.size || 10, bold = !!o.bold;
+    let hex = '';
+    for (const ch of String(s)) { const c = codiceWin(ch); if (c) hex += c.toString(16).padStart(2, '0'); }
+    if (o.allinea === 'd') x -= largTesto(s, size, bold);
+    this.c.push(`BT /F${bold ? 2 : 1} ${size} Tf ${this.col(o.colore || '#000000')} rg ${x.toFixed(2)} ${(842 - y).toFixed(2)} Td <${hex}> Tj ET`);
+  }
+  blob() {
+    const o = [];
+    o[1] = '<< /Type /Catalog /Pages 2 0 R >>';
+    o[3] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>';
+    o[4] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>';
+    const figli = [];
+    this.pagine.forEach((c, i) => {
+      const n = 5 + i * 2, flusso = c.join('\n');
+      figli.push(`${n} 0 R`);
+      o[n] = `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ${n + 1} 0 R >>`;
+      o[n + 1] = `<< /Length ${flusso.length} >>\nstream\n${flusso}\nendstream`;
+    });
+    o[2] = `<< /Type /Pages /Kids [${figli.join(' ')}] /Count ${this.pagine.length} >>`;
+    let out = '%PDF-1.4\n'; const pos = [];
+    for (let i = 1; i < o.length; i++) { pos[i] = out.length; out += `${i} 0 obj\n${o[i]}\nendobj\n`; }
+    const xref = out.length;
+    out += `xref\n0 ${o.length}\n0000000000 65535 f \n`;
+    for (let i = 1; i < o.length; i++) out += String(pos[i]).padStart(10, '0') + ' 00000 n \n';
+    out += `trailer\n<< /Size ${o.length} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;
+    const b = new Uint8Array(out.length);
+    for (let i = 0; i < out.length; i++) b[i] = out.charCodeAt(i) & 255;
+    return new Blob([b], { type: 'application/pdf' });
+  }
+}
+function pdfTurni(da, a, pid) {
+  const evs = eventi(da, a, { parrocchia: pid || null });
+  const pdf = new Pdf(), L = 40, R = 555;
+  const titolo = DB.impostazioni.titolo || 'Turnazione Lettori';
+  const sotto = etichettaPeriodo(da, a) + (pid ? ' · ' + parr(pid).nome : '');
+  let y = 0;
+  const testata = () => {
+    pdf.rett(0, 0, 595, 80, '#dcecfb');
+    pdf.testo(L, 38, tronca(titolo, 21, true, R - L), { size: 21, bold: true, colore: '#2f78bd' });
+    pdf.testo(L, 60, sotto, { size: 12.5, colore: '#4a6078' });
+    y = 100;
+  };
+  testata();
+  if (!evs.length) pdf.testo(L, y + 10, 'Nessuna celebrazione nel periodo scelto.', { size: 11 });
+  let giorno = '';
+  for (const e of evs) {
+    const t = getTurno(e), p = parr(e.parrocchiaId);
+    const h = Math.max(e.nome ? 38 : 26, e.ruoli.length * 15 + 10);
+    if (y + h + (e.data !== giorno ? 26 : 0) > 785) { pdf.nuova(); testata(); giorno = ''; }
+    if (e.data !== giorno) {
+      giorno = e.data;
+      pdf.rett(L, y, R - L, 20, '#eef5fc');
+      pdf.testo(L + 8, y + 14, maiusc(fmtGiorno(e.data)) + ' ' + e.data.slice(0, 4), { size: 11, bold: true, colore: '#2f78bd' });
+      y += 26;
+    }
+    pdf.rett(L, y, 3.5, h - 6, p.colore);
+    pdf.testo(L + 12, y + 13, e.ora, { size: 12, bold: true, colore: '#2b3440' });
+    pdf.testo(L + 56, y + 13, tronca(p.nome, 10.5, true, 185), { size: 10.5, bold: true, colore: p.colore });
+    if (e.nome) pdf.testo(L + 56, y + 26, tronca(e.nome, 9, false, 185), { size: 9, colore: '#666666' });
+    e.ruoli.forEach((r, i) => {
+      const yy = y + 13 + i * 15, l = lettore(t[i]);
+      pdf.testo(L + 250, yy, tronca(r, 9.5, false, 112), { size: 9.5, colore: '#666666' });
+      pdf.testo(L + 368, yy, l ? tronca(l.nome, 10.5, true, 145) : 'da assegnare', { size: 10.5, bold: !!l, colore: l ? '#2b3440' : '#d9534f' });
+    });
+    y += h;
+    pdf.linea(L, y - 3, R, y - 3, '#dddddd');
+    y += 3;
+  }
+  const n = pdf.pagine.length;
+  pdf.pagine.forEach((c, i) => {
+    pdf.c = c;
+    if (DB.impostazioni.nota) pdf.testo(L, 812, tronca(DB.impostazioni.nota, 8.5, false, 420), { size: 8.5, colore: '#555555' });
+    pdf.testo(R, 812, `Pagina ${i + 1} di ${n}`, { size: 8, colore: '#888888', allinea: 'd' });
+  });
+  return pdf.blob();
+}
+const nomePdf = (da, a) => `Turni lettori - ${etichettaPeriodo(da, a)}.pdf`.replace(/[\\/:*?"<>|]/g, '');
+
+/* ============================ Vista: Altro (statistiche, impostazioni, dati) ============================ */
+function vistaAltro() {
+  const st = conta(`${UI.anno}-01-01`, `${UI.anno}-12-31`);
+  const righe = lettoriOrd().filter(l => l.attivo !== false || st[l.id]).map(l => ({ l, s: st[l.id] || { tot: 0, parr: {}, date: [] } }))
+    .sort((x, y) => y.s.tot - x.s.tot || x.l.nome.localeCompare(y.l.nome, 'it'));
+  const attivi = righe.filter(r => r.l.attivo !== false);
+  const max = Math.max(1, ...righe.map(r => r.s.tot));
+  const min = attivi.length ? Math.min(...attivi.map(r => r.s.tot)) : 0;
+  const media = attivi.length ? attivi.reduce((n, r) => n + r.s.tot, 0) / attivi.length : 0;
+  const riposo = Number(DB.impostazioni.riposo) || 0;
+  return `<div class="scheda"><div class="riga spazio"><h3 style="margin:0">Statistiche ${UI.anno}</h3>
+        <div class="riga"><button class="btn icona piccolo" data-a="anno" data-d="-1" aria-label="Anno precedente">‹</button><button class="btn icona piccolo" data-a="anno" data-d="1" aria-label="Anno successivo">›</button></div></div>
+      ${righe.length ? `<p class="tenue piccolo-t">Media ${media.toFixed(1)} turni a testa · minimo ${min} · massimo ${attivi.length ? Math.max(...attivi.map(r => r.s.tot)) : 0}. Chi può leggere in poche messe avrà naturalmente meno turni.</p>
+      <div class="scorri"><table><tr><th>Lettore</th><th class="num">Turni</th>${DB.parrocchie.map(p => `<th class="num">${esc(p.nome)}</th>`).join('')}<th></th><th>Ultimo</th></tr>
+      ${righe.map(({ l, s }) => `<tr><td>${esc(l.nome)}</td><td class="num"><b>${s.tot}</b></td>${DB.parrocchie.map(p => `<td class="num">${s.parr[p.id] || 0}</td>`).join('')}
+        <td><div class="barra"><i style="width:${Math.round(s.tot / max * 100)}%"></i></div></td>
+        <td style="white-space:nowrap">${s.date.length ? fmtBreve([...s.date].sort().pop()) : '—'}</td></tr>`).join('')}</table></div>`
+      : `<p class="tenue piccolo-t">Ancora nessun lettore.</p>`}
+    </div>
+
+    <div class="scheda"><h3>Impostazioni</h3>
+      <label class="campo">Titolo (compare in alto e nel PDF)<input type="text" value="${esc(DB.impostazioni.titolo)}" data-c="imp" data-k="titolo"></label>
+      <label class="campo">Nota in fondo al PDF e al messaggio<input type="text" value="${esc(DB.impostazioni.nota)}" data-c="imp" data-k="nota" placeholder="es. In caso di impedimento avvisare don …"></label>
+      <label class="campo">Riposo minimo tra due turni della stessa persona
+        <select data-c="imp" data-k="riposo">
+          <option value="0" ${riposo === 0 ? 'selected' : ''}>Nessun vincolo</option>
+          <option value="8" ${riposo === 8 ? 'selected' : ''}>Non due settimane di fila</option>
+          <option value="15" ${riposo === 15 ? 'selected' : ''}>Almeno 2 settimane</option>
+          <option value="22" ${riposo === 22 ? 'selected' : ''}>Almeno 3 settimane</option>
+        </select></label>
+    </div>
+
+    ${ONLINE ? `<div class="scheda"><h3>Dati e accesso</h3>
+      <p class="tenue piccolo-t" style="margin-top:0">I dati sono salvati da soli a ogni modifica in un Foglio Google e sono gli stessi su computer e cellulare. Chi ha il link vede i turni; per modificare serve il codice.</p>
+      <div class="riga">
+        <button class="btn primario" data-a="imposta-codice">${SENZA_CODICE ? 'Scegli il codice di modifica' : 'Cambia codice di modifica'}</button>
+        ${SENZA_CODICE ? '' : `<button class="btn" data-a="esci">Esci dalla modifica su questo dispositivo</button>`}
+      </div>
+      <div class="riga mt">
+        <button class="btn" data-a="backup">Copia di sicurezza (.json)</button>
+        <button class="btn" data-a="importa">📂 Carica dati da un file</button>
+        ${URL_FOGLIO ? `<a class="btn" href="${esc(URL_FOGLIO)}" target="_blank" rel="noopener">📊 Apri il Foglio Google</a>` : ''}
+      </div>`
+    : `<div class="scheda"><h3>Dati e salvataggio</h3>
+      <p class="tenue piccolo-t" style="margin-top:0">Ogni modifica viene ricordata da questo dispositivo. Per portare i dati sugli altri dispositivi premi <b>Salva file</b>: ottieni questo stesso file con i dati dentro, da mettere su Google Drive al posto del precedente.</p>
+      <div class="riga">
+        <button class="btn primario" data-a="salva-file">💾 Salva file con i dati</button>
+        <button class="btn" data-a="importa">📂 Carica dati da un file</button>
+        <button class="btn" data-a="backup">Copia di sicurezza (.json)</button>
+      </div>`}
+      <div class="riga mt">
+        <button class="btn piccolo" data-a="esempio">Carica dati di esempio</button>
+        <button class="btn piccolo pericolo" data-a="svuota-turni">Cancella tutti i turni</button>
+        <button class="btn piccolo pericolo" data-a="azzera">Azzera tutto</button>
+      </div>
+      <p class="tenue piccolo-t" style="margin-bottom:0">Ultima modifica: ${DB.aggiornato ? new Date(DB.aggiornato).toLocaleString('it-IT') : '—'}</p>
+    </div>`;
+}
+function costruisciHtml() {
+  const copia = MODELLO.cloneNode(true);
+  copia.querySelector('#dati-incorporati').textContent = JSON.stringify(DB).replace(/</g, '\\u003c');
+  const t = copia.querySelector('title'); if (t) t.textContent = DB.impostazioni.titolo || 'Turnazione Lettori';
+  return '<!DOCTYPE html>\n' + copia.outerHTML;
+}
+async function salvaFile() {
+  if (!DB.aggiornato) DB.aggiornato = new Date().toISOString();
+  const html = costruisciHtml();
+  const fatto = msg => { TS_FILE = DB.aggiornato; scriviLS(CHIAVE_TS, TS_FILE); aggiornaStato(); toast(msg); };
+  if (window.showSaveFilePicker) {
+    try {
+      if (!maniglia) maniglia = await window.showSaveFilePicker({ suggestedName: 'Turnazione Lettori.html', types: [{ description: 'Pagina HTML', accept: { 'text/html': ['.html'] } }] });
+      const w = await maniglia.createWritable(); await w.write(html); await w.close();
+      return fatto('File salvato ✓');
+    } catch (e) {
+      if (e && e.name === 'AbortError') return;
+      maniglia = null;
+    }
+  }
+  scarica(new Blob([html], { type: 'text/html' }), 'Turnazione Lettori.html');
+  fatto('File scaricato: caricalo su Google Drive al posto del vecchio');
+}
+function importa(testo) {
+  let d = null;
+  try {
+    if (testo.trim().startsWith('{')) d = JSON.parse(testo);
+    else { const el = new DOMParser().parseFromString(testo, 'text/html').querySelector('#dati-incorporati'); d = el ? JSON.parse(el.textContent) : null; }
+  } catch (e) {}
+  if (!d || !Array.isArray(d.parrocchie) || !Array.isArray(d.lettori)) return toast('Il file non contiene dati della turnazione');
+  if (!confirm(`Caricare i dati dal file?\n${d.lettori.length} lettori, ultima modifica ${d.aggiornato ? new Date(d.aggiornato).toLocaleString('it-IT') : 'sconosciuta'}.\nI dati attuali di questo dispositivo verranno sostituiti.`)) return;
+  DB = normalizza(d); salva(); render(); toast('Dati caricati ✓');
+}
+function datiEsempio() {
+  const [p1, p2] = DB.parrocchie;
+  const nomi = ['Anna Bianchi', 'Marco Rossi', 'Lucia Ferrari', 'Giuseppe Russo', 'Maria Esposito', 'Paolo Colombo', 'Chiara Romano', 'Francesco Ricci', 'Elena Marino', 'Salvatore Greco', 'Teresa Bruno', 'Antonio Gallo', 'Rosa Conti', 'Luca De Luca'];
+  nomi.forEach((n, i) => DB.lettori.push({ id: uid(), nome: n, telefono: '', attivo: true, messe: [], assenze: [], note: 'esempio',
+    parrocchie: !p2 ? [p1.id] : i % 5 === 0 ? [p1.id, p2.id] : i % 2 ? [p1.id] : [p2.id] }));
+}
+
+/* ============================ Azioni (clic) ============================ */
+const AZIONI = {
+  tab(el) { UI.tab = el.dataset.tab; render(); window.scrollTo(0, 0); },
+  chiudi: chiudiDlg,
+  'salva-file'() { if (!ONLINE) return salvaFile(); if (SOLA_LETTURA) return accedi(); if (invioAttesa) invia(); else toast('Tutto salvato ✓'); },
+  async 'imposta-codice'() {
+    const n = (prompt(SENZA_CODICE ? 'Scegli il codice di modifica (almeno 6 caratteri, meglio lettere e numeri).\nServirà per modificare da altri dispositivi: non dimenticarlo.' : 'Nuovo codice di modifica (almeno 6 caratteri):') || '').trim();
+    if (!n) return;
+    try {
+      const r = await srv('impostaCodice', CODICE, n);
+      if (!r.ok) return toast(r.errore || 'Operazione non riuscita');
+      CODICE = n; scriviLS(CHIAVE_COD, n); SENZA_CODICE = false; render(); toast('Codice impostato ✓');
+    } catch (e) { toast('Errore di connessione'); }
+  },
+  esci() { if (!confirm('Su questo dispositivo si potranno solo vedere i turni. Continuare?')) return; CODICE = ''; scriviLS(CHIAVE_COD, ''); caricaOnline(); },
+  mese(el) { const [y, m] = UI.mese.split('-').map(Number); const d = new Date(y, m - 1 + Number(el.dataset.d), 1); UI.mese = iso(d).slice(0, 7); render(); },
+  'mese-oggi'() { UI.mese = meseDi(oggi()); render(); const g = [...$$('.giorno')].find(s => s.id.slice(2) >= oggi()); if (g) g.scrollIntoView({ behavior: 'smooth', block: 'start' }); },
+  anno(el) { UI.anno += Number(el.dataset.d); render(); },
+  'dlg-genera': dlgGenera,
+  genera() {
+    const da = $('#g-da').value, a = $('#g-a').value;
+    if (!da || !a || a < da) return toast('Controlla le date');
+    if (diffGiorni(da, a) > 400) return toast('Periodo troppo lungo (massimo un anno)');
+    if (!DB.lettori.some(l => l.attivo !== false)) return toast('Inserisci prima i lettori');
+    const rigenera = $('input[name=g-modo]:checked').value === 'rigenera';
+    if (rigenera && !confirm('I turni già assegnati nel periodo verranno sostituiti. Continuare?')) return;
+    annullo = JSON.stringify(DB.turni);
+    const r = genera(da, a, rigenera, $('#g-parr').value);
+    salva(); chiudiDlg(); UI.mese = meseDi(da); render();
+    toast(`Assegnati ${r.assegnati} turni` + (r.scoperti ? ` · ${r.scoperti} posti scoperti` : ''), 'Annulla', () => { DB.turni = JSON.parse(annullo); salva(); render(); });
+  },
+  salta(el) {
+    const k = el.dataset.k, i = DB.saltate.indexOf(k);
+    if (i >= 0) DB.saltate.splice(i, 1); else DB.saltate.push(k);
+    salva(); render();
+  },
+  'dlg-lettore'(el) { dlgLettore(el.dataset.id || ''); },
+  'dlg-elenco': dlgElenco,
+  'piu-assenza'() { $('#l-assenze').insertAdjacentHTML('beforeend', rigaAssenza()); },
+  'meno-assenza'(el) { el.closest('.assenza').remove(); },
+  'salva-lettore'() {
+    const nome = $('#l-nome').value.trim();
+    if (!nome) return toast('Scrivi il nome');
+    const parrocchie = $$('.l-parr:checked').map(c => c.value);
+    if (!parrocchie.length) return toast('Scegli almeno una parrocchia');
+    const assenze = $$('#l-assenze .assenza').map(r => { const da = $('.as-da', r).value, a = $('.as-a', r).value || da; return da ? { da, a: a < da ? da : a } : null; }).filter(Boolean);
+    const dati = { nome, telefono: $('#l-tel').value.trim(), parrocchie, messe: $$('.l-messa:checked').map(c => c.value), assenze, note: $('#l-note').value.trim(), attivo: $('#l-attivo').checked };
+    const id = $('#l-id').value, l = lettore(id);
+    if (l) Object.assign(l, dati); else DB.lettori.push(Object.assign({ id: uid() }, dati));
+    salva(); chiudiDlg(); render();
+  },
+  'elimina-lettore'(el) {
+    const l = lettore(el.dataset.id); if (!l || !confirm(`Eliminare ${l.nome}? Verrà tolto anche dai turni già assegnati.\n(Se vuoi solo metterlo in pausa, togli la spunta «Attivo».)`)) return;
+    DB.lettori = DB.lettori.filter(x => x.id !== l.id);
+    for (const k in DB.turni) DB.turni[k] = DB.turni[k].map(id => id === l.id ? null : id);
+    salva(); chiudiDlg(); render();
+  },
+  'salva-elenco'() {
+    const nomi = $('#el-nomi').value.split('\n').map(s => s.trim()).filter(Boolean);
+    const parrocchie = $$('.el-parr:checked').map(c => c.value);
+    if (!nomi.length) return toast('Scrivi almeno un nome');
+    if (!parrocchie.length) return toast('Scegli almeno una parrocchia');
+    const esistenti = new Set(DB.lettori.map(l => l.nome.toLowerCase()));
+    let n = 0;
+    for (const nome of nomi) if (!esistenti.has(nome.toLowerCase())) { DB.lettori.push({ id: uid(), nome, telefono: '', parrocchie: [...parrocchie], messe: [], assenze: [], note: '', attivo: true }); esistenti.add(nome.toLowerCase()); n++; }
+    salva(); chiudiDlg(); render(); toast(`${n} lettori aggiunti`);
+  },
+  'piu-parr'() { DB.parrocchie.push({ id: uid(), nome: 'Nuova parrocchia', colore: '#5fc08f' }); salva(); render(); },
+  'elimina-parr'(el) {
+    const p = parr(el.dataset.id);
+    if (!confirm(`Eliminare «${p.nome}» con tutte le sue messe?`)) return;
+    DB.parrocchie = DB.parrocchie.filter(x => x.id !== p.id);
+    DB.messe = DB.messe.filter(m => m.parrocchiaId !== p.id);
+    DB.celebrazioni = DB.celebrazioni.filter(m => m.parrocchiaId !== p.id);
+    for (const l of DB.lettori) l.parrocchie = l.parrocchie.filter(id => id !== p.id);
+    if (UI.filtro === p.id) UI.filtro = ''; if (UI.esp.parr === p.id) UI.esp.parr = '';
+    salva(); render();
+  },
+  'dlg-messa'(el) { dlgMessa(el.dataset.id || '', !!el.dataset.spec, el.dataset.parr); },
+  'salva-messa'() {
+    const speciale = !!$('#m-spec').value, id = $('#m-id').value;
+    const ruoli = $('#m-ruoli').value.split(',').map(s => s.trim()).filter(Boolean);
+    const ora = $('#m-ora').value;
+    if (!ora) return toast('Indica l\'ora');
+    if (!ruoli.length) return toast('Indica almeno una lettura');
+    const dati = { parrocchiaId: $('#m-parr').value, ora, nome: $('#m-nome').value.trim(), ruoli };
+    if (speciale) {
+      dati.data = $('#m-data').value; if (!dati.data) return toast('Indica la data');
+      const c = DB.celebrazioni.find(x => x.id === id);
+      if (c) { if (c.data !== dati.data) { delete DB.turni[c.data + '|' + c.id]; } Object.assign(c, dati); } else DB.celebrazioni.push(Object.assign({ id: uid() }, dati));
+    } else {
+      dati.giorno = Number($('#m-giorno').value); dati.attiva = $('#m-attiva').checked;
+      const m = DB.messe.find(x => x.id === id);
+      if (m) Object.assign(m, dati); else DB.messe.push(Object.assign({ id: uid() }, dati));
+    }
+    salva(); chiudiDlg(); render();
+  },
+  'elimina-messa'(el) {
+    if (!confirm('Eliminare questa celebrazione? I turni collegati non saranno più visibili.')) return;
+    const id = el.dataset.id;
+    if (el.dataset.spec) DB.celebrazioni = DB.celebrazioni.filter(x => x.id !== id);
+    else { DB.messe = DB.messe.filter(x => x.id !== id); for (const l of DB.lettori) l.messe = (l.messe || []).filter(x => x !== id); }
+    for (const k in DB.turni) if (k.endsWith('|' + id)) delete DB.turni[k];
+    DB.saltate = DB.saltate.filter(k => !k.endsWith('|' + id));
+    salva(); chiudiDlg(); render();
+  },
+  periodo(el) {
+    const og = oggi(), p = el.dataset.p;
+    if (p.startsWith('sett')) { const l = piuGiorni(lunediDi(og), p.endsWith('+') ? 7 : 0); UI.esp.da = l; UI.esp.a = piuGiorni(l, 6); }
+    else { const d = new Date(); const ym = iso(new Date(d.getFullYear(), d.getMonth() + (p.endsWith('+') ? 1 : 0), 1)).slice(0, 7); UI.esp.da = inizioMese(ym); UI.esp.a = fineMese(ym); }
+    render();
+  },
+  'scarica-pdf'() { scarica(pdfTurni(UI.esp.da, UI.esp.a, UI.esp.parr), nomePdf(UI.esp.da, UI.esp.a)); toast('PDF creato'); },
+  async 'condividi-pdf'() {
+    const blob = pdfTurni(UI.esp.da, UI.esp.a, UI.esp.parr), nome = nomePdf(UI.esp.da, UI.esp.a);
+    try {
+      const file = new File([blob], nome, { type: 'application/pdf' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: nome.replace('.pdf', '') }); return; }
+    } catch (e) { if (e && e.name === 'AbortError') return; }
+    scarica(blob, nome); toast('Condivisione non disponibile: PDF scaricato');
+  },
+  'wa-testo'() { window.open(URL_WA + '?text=' + encodeURIComponent(testoTurni(UI.esp.da, UI.esp.a, UI.esp.parr)), '_blank'); },
+  'copia-testo'() { copia(testoTurni(UI.esp.da, UI.esp.a, UI.esp.parr)); },
+  'wa-personale'(el) {
+    const l = lettore(el.dataset.id); if (!l) return;
+    const t = testoPersonale(l, UI.esp.da, UI.esp.a, UI.esp.parr), n = numeroWa(l.telefono);
+    if (n) window.open(URL_WA + n + '?text=' + encodeURIComponent(t), '_blank'); else copia(t);
+  },
+  stampa() {
+    const { da, a, parr: pid } = UI.esp;
+    $('#stampa').innerHTML = `<h1>${esc(DB.impostazioni.titolo)}</h1><p>${esc(etichettaPeriodo(da, a))}${pid ? ' · ' + esc(parr(pid).nome) : ''}</p>${tabellaTurni(eventi(da, a, { parrocchia: pid || null }))}${DB.impostazioni.nota ? `<p style="margin-top:10pt">${esc(DB.impostazioni.nota)}</p>` : ''}`;
+    window.print();
+  },
+  importa() { $('#file-importa').click(); },
+  backup() { scarica(new Blob([JSON.stringify(DB, null, 1)], { type: 'application/json' }), `Turnazione lettori - backup ${oggi()}.json`); },
+  esempio() {
+    if (DB.lettori.length && !confirm('Aggiungere 14 lettori di esempio a quelli esistenti?')) return;
+    datiEsempio(); salva(); render(); toast('Lettori di esempio aggiunti: ora premi «Genera turni»');
+  },
+  'svuota-turni'() {
+    if (!confirm('Cancellare TUTTI i turni assegnati (anche quelli passati)? Lettori e messe restano.')) return;
+    annullo = JSON.stringify(DB.turni); DB.turni = {}; salva(); render();
+    toast('Turni cancellati', 'Annulla', () => { DB.turni = JSON.parse(annullo); salva(); render(); });
+  },
+  azzera() {
+    if (!confirm('Cancellare TUTTO (lettori, messe, turni) e ripartire da zero?')) return;
+    if (!confirm('Sei sicuro? L\'operazione non si può annullare.')) return;
+    DB = datiIniziali(); salva(); render();
+  }
+};
+
+/* ============================ Modifiche (campi) ============================ */
+const CAMBI = {
+  filtro(el) { UI.filtro = el.value; render(); },
+  assegna(el) {
+    const k = el.dataset.k, i = Number(el.dataset.i), e = eventoDaChiave(k);
+    if (!e) return;
+    const t = getTurno(e);
+    let v = el.value;
+    t[i] = null; DB.turni[k] = t;
+    if (v === '*') {
+      v = scegli(e, i, t, conta(piuGiorni(e.data, -180), piuGiorni(e.data, 60))) || '';
+      if (!v) toast('Nessun lettore disponibile per questo turno');
+    }
+    t[i] = v || null; DB.turni[k] = t;
+    salva(); render();
+  },
+  'parr-nome'(el) { const p = parr(el.dataset.id); p.nome = el.value.trim() || 'Parrocchia'; salva(); render(); },
+  'parr-colore'(el) { parr(el.dataset.id).colore = el.value; salva(); render(); },
+  imp(el) { DB.impostazioni[el.dataset.k] = el.dataset.k === 'riposo' ? Number(el.value) : el.value.trim(); salva(); },
+  'esp-da'(el) { if (!el.value) return; UI.esp.da = el.value; if (UI.esp.a < el.value) UI.esp.a = el.value; render(); },
+  'esp-a'(el) { if (!el.value) return; UI.esp.a = el.value; if (UI.esp.da > el.value) UI.esp.da = el.value; render(); },
+  'esp-parr'(el) { UI.esp.parr = el.value; render(); }
+};
+
+document.addEventListener('click', ev => {
+  const el = ev.target.closest('[data-a]');
+  if (el && AZIONI[el.dataset.a]) { ev.preventDefault(); AZIONI[el.dataset.a](el, ev); }
+});
+document.addEventListener('change', ev => {
+  const el = ev.target.closest('[data-c]');
+  if (el && CAMBI[el.dataset.c]) CAMBI[el.dataset.c](el);
+});
+document.addEventListener('input', ev => {
+  if (ev.target.id === 'cerca') { UI.cerca = ev.target.value; elencoLettori(); }
+});
+$('#file-importa').addEventListener('change', ev => {
+  const f = ev.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => importa(String(r.result));
+  r.readAsText(f);
+  ev.target.value = '';
+});
+$('#dlg').addEventListener('click', ev => { if (ev.target === ev.currentTarget) chiudiDlg(); });
+window.addEventListener('beforeunload', ev => {
+  const daSalvare = ONLINE ? (invioAttesa || invioInCorso) : (DB && (DB.aggiornato || '') > TS_FILE && leggiLS(CHIAVE_LS) === null);
+  if (daSalvare) { ev.preventDefault(); ev.returnValue = ''; }
+});
+
+if (ONLINE) avviaOnline();
+else { carica(); render(); }
+</script>
+</body>
+</html>
